@@ -117,7 +117,7 @@ const getEmotes = async () => {
           "https:" +
           emotes[i].data.host.url +
           "/" +
-          emotes[i].data.host.files[4].name,
+          emotes[i].data.host.files[3].name,
       });
     }
   })
