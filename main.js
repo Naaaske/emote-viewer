@@ -87,7 +87,6 @@ const getEmotes = async () => {
         url: `https://cdn.betterttv.net/emote/${data.sharedEmotes[i].id}/3x`,
       });
     }
-    console.log(config.emotes);
   }) 
   .catch();
 
