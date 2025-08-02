@@ -81,6 +81,13 @@ const getEmotes = async () => {
         url: `https://cdn.betterttv.net/emote/${data.channelEmotes[i].id}/3x`,
       });
     }
+    for (let i = 0; i < data.sharedEmotes.length; i++) {
+      config.emotes.push({
+        name: data.sharedEmotes[i].code,
+        url: `https://cdn.betterttv.net/emote/${data.sharedEmotes[i].id}/3x`,
+      });
+    }
+    console.log(config.emotes);
   }) 
   .catch();
 
