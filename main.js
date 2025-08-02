@@ -9,11 +9,9 @@ const config = {
 const getEmotes = async () => {
   // const proxy = "https://tpbcors.herokuapp.com/";
   const proxy = "https://api.roaringiron.com/proxy/";
+  const paramChannel = url.searchParams.get("c")
 
-  if (!config.channel)
-    return $("#errors").html(
-      `Invalid channel. Please enter a channel name in the URL. Example: https://api.roaringiron.com/emoteoverlay?channel=forsen`
-    );
+  config.channel = paramChannel ?? "naaaske"
 
   const twitchId = (
     await (
@@ -69,7 +67,6 @@ const getEmotes = async () => {
     }
   })
   .catch();
-
   
   await fetch(proxy + "https://api.betterttv.net/3/cached/users/twitch/" + twitchId)
   .then(response => {
@@ -142,10 +139,10 @@ const getEmotes = async () => {
   })
   .catch();
 
-  const successMessage = `Successfully loaded ${config.emotes.length} emotes for channel ${config.channel}`;
+  const message = `Successfully loaded ${config.emotes.length} emotes for channel ${config.channel}` + (!paramChannel ? `<br>If you want another channel, enter it in the URL. Example: https://naske.chat?c=naaaske` : ``);
 
-  $("#errors").html(successMessage).delay(2000).fadeOut(300);
-  console.log(successMessage, config.emotes);
+  $("#errors").append().html(message).delay(paramChannel ? 2000 : 10000).fadeOut(300);
+  console.log(message, config.emotes);
 };
 
 const findEmoteObjectInMessage = (message) => {
