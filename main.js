@@ -111,14 +111,18 @@ const getEmotes = async () => {
     if (emoteSet === null) return;
     const emotes = emoteSet["emotes"];
     for (let i = 0; i < emotes.length; i++) {
-      config.emotes.push({
-        name: emotes[i].name,
-        url:
+      const url = emotes[i].data.host.url;
+      const fileExt = emotes[i].data.host.files[3]?.name;
+      if (url && fileExt){
+        config.emotes.push({
+          name: emotes[i].name,
+          url:
           "https:" +
-          emotes[i].data.host.url +
+          url +
           "/" +
-          emotes[i].data.host.files[3].name,
-      });
+          fileExt,
+        });
+      }
     }
   })
   .catch();
