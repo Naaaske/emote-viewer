@@ -4,13 +4,25 @@ const paramChannel = url.searchParams.get('channel') || url.searchParams.get('c'
 const paramOnlyListed = url.searchParams.has('onlyListed')
 
 const config = {
-  channel: paramChannel || 'northernlion',
-  currentEmote: { emote: "", url: "" },
-  emotes: [],
+  channel: paramChannel || 'naaaske',
+  emotes: new Map(),
 };
 
-const init = async () => {
-  // const proxy = "https://tpbcors.herokuapp.com/";
+const fetchData = async (url) => {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      console.error(`Failed to fetch from ${url}`);
+      return null;
+    }
+    return await response.json();
+  } catch (error) {
+    console.error(`Error fetching from ${url}:`, error);
+    return null;
+  }
+};
+
+const loadEmotes = async () => {
   const proxy = "https://api.roaringiron.com/proxy/";
 
   const twitchId = (
@@ -35,12 +47,10 @@ const init = async () => {
       for (let i = 0; i < emoteNames.length; i++) {
         for (let j = 0; j < data.sets[emoteNames[i]].emoticons.length; j++) {
           const emote = data.sets[emoteNames[i]].emoticons[j];
-          config.emotes.push({
-            name: emote.name,
-            url:
-              "https://" +
-              (emote.urls["4"] || emote.urls["2"] || emote.urls["1"]).split("//").pop(),
-          });
+          const name = emote.name;
+          const url = "https://" + (emote.urls["4"] || emote.urls["2"] || emote.urls["1"]).split("//").pop();
+
+          config.emotes.set(name, url);
         }
       }
     })
@@ -57,12 +67,10 @@ const init = async () => {
       for (let i = 0; i < emoteNames.length; i++) {
         for (let j = 0; j < data.sets[emoteNames[i]].emoticons.length; j++) {
           const emote = data.sets[emoteNames[i]].emoticons[j];
-          config.emotes.push({
-            name: emote.name,
-            url:
-              "https://" +
-              (emote.urls["4"] || emote.urls["2"] || emote.urls["1"]).split("//").pop(),
-          });
+          const name = emote.name;
+          const url = "https://" + (emote.urls["4"] || emote.urls["2"] || emote.urls["1"]).split("//").pop();
+          
+          config.emotes.set(name, url);
         }
       }
     })
@@ -76,16 +84,16 @@ const init = async () => {
     .then(data => {
       if (!data) return;
       for (let i = 0; i < data.channelEmotes.length; i++) {
-        config.emotes.push({
-          name: data.channelEmotes[i].code,
-          url: `https://cdn.betterttv.net/emote/${data.channelEmotes[i].id}/3x`,
-        });
+        const name = data.channelEmotes[i].code;
+        const url = `https://cdn.betterttv.net/emote/${data.channelEmotes[i].id}/3x`;
+
+        config.emotes.set(name, url);
       }
       for (let i = 0; i < data.sharedEmotes.length; i++) {
-        config.emotes.push({
-          name: data.sharedEmotes[i].code,
-          url: `https://cdn.betterttv.net/emote/${data.sharedEmotes[i].id}/3x`,
-        });
+        const name = data.sharedEmotes[i].code;
+        const url = `https://cdn.betterttv.net/emote/${data.sharedEmotes[i].id}/3x`;
+
+        config.emotes.set(name, url);
       }
     })
     .catch();
@@ -98,10 +106,10 @@ const init = async () => {
     .then(data => {
       if (!data) return;
       for (let i = 0; i < data.length; i++) {
-        config.emotes.push({
-          name: data[i].code,
-          url: `https://cdn.betterttv.net/emote/${data[i].id}/3x`,
-        });
+        const name = data[i].code
+        const url = `https://cdn.betterttv.net/emote/${data[i].id}/3x`
+
+        config.emotes.set(name, url);
       }
     })
     .catch();
@@ -120,15 +128,16 @@ const init = async () => {
         if (paramOnlyListed && emotes[i].data.listed === false) {
           continue;
         }
-        const url = emotes[i].data.host.url;
+        const miniUrl = emotes[i].data.host.url;
         const fileExt = emotes[i].data.host.files[3]?.name;
-        if (url && fileExt) {
-          config.emotes.push({
-            name: emotes[i].name,
-            url: `https:${url}/4x.webp`
-          });
+        if (miniUrl && fileExt) {
+          const name = emotes[i].name;
+          const url = `https:${miniUrl}/4x.webp`;
+
+          config.emotes.set(name, url)
         }
       }
+      connectTo7tvUpdates(data["emote_set_id"]);
     })
     .catch();
 
@@ -140,71 +149,119 @@ const init = async () => {
     .then(data => {
       if (!data) return;
       for (let i = 0; i < data.emotes.length; i++) {
-        config.emotes.push({
-          name: data.emotes[i].name,
-          url: `https://cdn.7tv.app/emote/${data.emotes[i].id}/4x.webp`,
-        });
+        const name = data.emotes[i].name;
+        const url = `https://cdn.7tv.app/emote/${data.emotes[i].id}/4x.webp`;
+
+        config.emotes.set(name, url);
       }
     })
     .catch();
 
-  const message = `Successfully loaded ${config.emotes.length} emotes for channel ${config.channel}` + (!paramChannel ? `<br>If you want another channel, enter it in the URL. Example: https://naske.chat?c=${config.channel}` : ``);
+  const message = `Successfully loaded ${config.emotes.size} emotes for channel ${config.channel}` + (!paramChannel ? `<br>If you want another channel, enter it in the URL. Example: https://naske.chat?c=${config.channel}` : ``);
 
   $("#errors").append().html(message).delay(paramChannel ? 2000 : 10000).fadeOut(300);
-  console.log(message, config.emotes);
 };
 
-const findEmoteObjectInMessage = (message) => {
-  for (const emote of config.emotes) {
-    if (message.includes(emote.name)) {
-      return emote;
-    }
-  }
-  return null;
+const findEmoteInMessage = (message) => {
+  return message.filter(word => config.emotes.has(word));
 };
 
 const findEmotes = (message, rawMessage) => {
-  if (config.emotes.length === 0) return;
+  if (config.emotes.size === 0) return;
 
-  const emoteUsedPos = rawMessage[4].startsWith("emotes=")
-    ? 4
-    : rawMessage[5].startsWith("emote-only=")
-      ? 6
-      : 5;
+  const emoteUrlsUsed = [];
 
-  const emoteUsed = rawMessage[emoteUsedPos].split("emotes=").pop();
-  const splitMessage = message.split(" ").filter((a) => !!a.length);
+  const ttvEmoteTag = rawMessage.find(part => part.startsWith("emotes="));
+  if (ttvEmoteTag){
+    const ttvEmotesUsed = ttvEmoteTag.split("emotes=").pop();
 
-  if (
-    rawMessage[emoteUsedPos].startsWith("emotes=") &&
-    emoteUsed.length > 1
-  ) {
-    config.currentEmote.emote = message.substring(
-      parseInt(emoteUsed.split(":")[1].split("-")[0]),
-      parseInt(emoteUsed.split(":")[1].split("-")[1]) + 1
-    );
-    config.currentEmote.url = `https://static-cdn.jtvnw.net/emoticons/v2/${emoteUsed.split(":")[0]
-      }/default/dark/4.0`;
-  } else {
-    const emoteObj = findEmoteObjectInMessage(splitMessage);
-    if (emoteObj !== null) {
-      config.currentEmote.emote = emoteObj.name;
-      config.currentEmote.url = emoteObj.url;
+    if (ttvEmotesUsed.length > 0){
+      const url = `https://static-cdn.jtvnw.net/emoticons/v2/${ttvEmotesUsed.split(":")[0]}/default/dark/4.0`;
+      emoteUrlsUsed.push(url);
     }
   }
+  
+  const splitMessage = message.split(" ").filter((a) => !!a.length);
+  const matchedEmotes = findEmoteInMessage(splitMessage);
+  matchedEmotes.forEach(emote => {
+    const url = config.emotes.get(emote)
+    emoteUrlsUsed.push(url);
+  });
 
-  displayEmote();
+  if(emoteUrlsUsed.length > 0){
+    const emoteUrl = emoteUrlsUsed[Math.floor(Math.random() * matchedEmotes.length)];
+    displayEmoteURL(emoteUrl);
+  }
 };
 
-const displayEmote = () => {
+const displayEmoteURL = (url) => {
+  if (url == '') {
+    $("#showEmote").html('');
+  }
+
   const image = new Image();
-  image.src = config.currentEmote.url;
+  image.src = url;
   image.onload = () => {
     $("#showEmote").html(image);
   };
 };
 
-const connect = () => {
+const connectTo7tvUpdates = (stvSetId) => {
+  const stvUpdates = new WebSocket("wss://events.7tv.io/v3?version=1.4.31");
+  const timeout = setTimeout(() => {
+    chat.close();
+    chat.connect();
+  }, 10000);
+
+  stvUpdates.onopen = function () {
+    clearInterval(timeout);
+    stvUpdates.send(
+      `{"op":35,"d":{"type":"emote_set.update","condition":{"object_id":"${stvSetId}"}}}`
+    )
+    console.log("Connected to 7TV set updates");
+  }
+
+  stvUpdates.onerror = function () {
+    console.error("There was an error.. disconnected from the 7TV set updates");
+    stvUpdates.close();
+    stvUpdates.connect();
+  };
+
+  stvUpdates.onmessage = function (event) {
+    const messageData = JSON.parse(event.data)["d"];
+
+    if (messageData["type"] == "emote_set.update"){
+      const body = messageData["body"]
+      const pulled = body["pulled"];
+      const pushed = body["pushed"];
+
+      if (pulled){
+        pulled.forEach(e => {
+          if (e["key"] == 'emotes'){
+            const emote = e["old_value"]
+            const name = emote["name"]
+            config.emotes.delete(name);
+            displayEmoteURL('');
+          }
+        });
+      }
+
+      if (pushed){
+        pushed.forEach(e => {
+          if (e["key"] == 'emotes'){
+            const emote = e["value"]
+            const name = emote["name"]
+            const url = `https:${emote["data"]["host"]["url"]}/4x.webp`
+            config.emotes.set(name, url);
+            displayEmoteURL(url);
+          }
+        });
+      }
+    }
+  }
+}
+
+const connectToChat = () => {
   const chat = new WebSocket("wss://irc-ws.chat.twitch.tv");
   const timeout = setTimeout(() => {
     chat.close();
@@ -212,7 +269,6 @@ const connect = () => {
   }, 10000);
 
   chat.onopen = function () {
-    init();
     clearInterval(timeout);
     chat.send(
       "CAP REQ :twitch.tv/tags twitch.tv/commands twitch.tv/membership"
@@ -250,3 +306,8 @@ const connect = () => {
     }
   };
 };
+
+const init = () => {
+  loadEmotes();
+  connectToChat();
+}
