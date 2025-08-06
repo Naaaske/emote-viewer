@@ -8,33 +8,24 @@ const config = {
   emotes: new Map(),
 };
 
-const fetchData = async (url) => {
-  try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      console.error(`Failed to fetch from ${url}`);
-      return null;
-    }
-    return await response.json();
-  } catch (error) {
-    console.error(`Error fetching from ${url}:`, error);
-    return null;
-  }
-};
-
 const loadEmotes = async () => {
   const proxy = "https://api.roaringiron.com/proxy/";
 
-  const twitchId = (
-    await (
-      await fetch(
-        proxy + "https://api.ivr.fi/v2/twitch/user?login=" + config.channel,
-        {
+  const response = await fetch(
+      proxy + "https://api.ivr.fi/v2/twitch/user?login=" + config.channel,
+      {
           headers: { "User-Agent": "api.roaringiron.com/emoteoverlay" },
-        }
-      )
-    ).json()
-  )?.[0].id;
+      }
+  );
+  const data = await response.json();
+  let twitchId = null;
+  if (data && data.length > 0) {
+      twitchId = data[0].id;
+  } else {
+    const message = `Could not find channel <i>${config.channel}</i>`
+    $("#errors").html(message);
+    return
+  }
 
   await fetch(proxy + "https://api.frankerfacez.com/v1/room/" + config.channel)
     .then(response => {
@@ -157,9 +148,8 @@ const loadEmotes = async () => {
     })
     .catch();
 
-  const message = `Successfully loaded ${config.emotes.size} emotes for channel ${config.channel}` + (!paramChannel ? `<br>If you want another channel, enter it in the URL. Example: https://naske.chat?c=${config.channel}` : ``);
-
-  $("#errors").append().html(message).delay(paramChannel ? 2000 : 10000).fadeOut(300);
+  const message = `Successfully loaded ${config.emotes.size} emotes for channel <i>${config.channel}</i>` + (!paramChannel ? `<br>` + `If you want another channel, enter it in the URL. Example: https://naske.chat?c=<i>${config.channel}</i>` : ``);
+  $("#errors").append().html(message).delay(paramChannel ? 5000 : 10000).fadeOut(300);
 };
 
 const findEmoteInMessage = (message) => {

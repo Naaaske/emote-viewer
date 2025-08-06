@@ -2,6 +2,15 @@ body {
   margin: 0;
 }
 
+#errors {
+  width: 100vw;
+  height: 100vh;
+  text-align: center; /* Horizontally centers the inner div's content */
+  /* This combination centers the inner div itself */
+  display: table-cell;
+  vertical-align: middle;
+}
+
 #showEmote {
   position: fixed;
   top: 0;
