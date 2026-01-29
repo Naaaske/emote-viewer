@@ -148,7 +148,7 @@ const loadEmotes = async () => {
     })
     .catch();
 
-  const message = `Successfully loaded ${config.emotes.size} emotes for channel <i>${config.channel}</i>` + (!paramChannel ? `<br>` + `If you want another channel, enter it in the URL. Example: https://naske.chat?c=<i>${config.channel}</i>` : ``);
+  const message = `<div>Successfully loaded ${config.emotes.size} emotes for channel<i> ${config.channel} </i> ` + (!paramChannel ? `\n` + `If you want another channel, enter it in the URL. Example: https://naske.chat?c=<i>${config.channel}</i></div>` : `</div>`);
   $("#errors").append().html(message).delay(paramChannel ? 5000 : 10000).fadeOut(300);
 };
 

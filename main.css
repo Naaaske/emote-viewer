@@ -1,14 +1,21 @@
 body {
   margin: 0;
+  background-color: black;
 }
 
 #errors {
   width: 100vw;
   height: 100vh;
-  text-align: center; /* Horizontally centers the inner div's content */
-  /* This combination centers the inner div itself */
-  display: table-cell;
-  vertical-align: middle;
+  color: white;
+  z-index: 2;
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  text-shadow: 1px 1px 2px black;
+  white-space: pre-line;
 }
 
 #showEmote {
@@ -19,11 +26,12 @@ body {
   height: 100vh;
   display: flex;
   justify-content: center;
-  z-index: 9999;
+  z-index: 1;
 }
 
 #showEmote img {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain; /* or 'cover' or 'fill' depending on desired behavior */
+  z-index: 1;
 }
